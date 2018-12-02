@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	log "github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/Sirupsen/logrus"
@@ -15,12 +16,12 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "mydocker"
 	app.Usage = usage
-
+	fmt.Println("main::before Commands\n")
 	app.Commands = []cli.Command{
 		initCommand,
 		runCommand,
 	}
-
+	fmt.Println("main::after Commands\n")
 	// Init log
 	app.Before = func(content *cli.Context) error {
 		//Log as JSON instead of the defaul ASCII formatter.
@@ -30,7 +31,7 @@ func main() {
 
 		return nil
 	}
-
+	fmt.Println("main::starting\n")
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}

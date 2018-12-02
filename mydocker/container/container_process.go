@@ -1,6 +1,7 @@
 package container
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"syscall"
@@ -19,6 +20,7 @@ import (
  是通过匿名管道来实现父子进程之间通信的.
 */
 
+//NewParentProcess 父进程
 func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
 
 	readPipe, writePipe, err := NewPipe()
@@ -26,10 +28,15 @@ func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
 		log.Errorf("New Pipe error %v", err)
 		return nil, nil
 	}
-	cmd := exec.Command("/proc/self/exe", "init")
-	//args := []string{"init", command}
-	//cmd := exec.Command("/proc/self/exe", args...) //run initcommand
-	//logrus.Infof("DEBUG:: %s", command)
+	fmt.Println("Creating ParentProcess NO.1\n ")
+	//cmd := exec.Command("/proc/self/exe", "init") // 怎么通过这个init去调用initCommand？/proc/se;f/exe就是调用自己，发送init参数，调用initcommand
+	initCmd, err := os.Readlink("/proc/self/exe")
+	if err != nil {
+		log.Errorf("get init process error %v", err)
+	}
+	cmd := exec.Command(initCmd, "init")
+	fmt.Println("Creating ParentProcess NO.2\n ")
+
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWIPC | syscall.CLONE_NEWNET | syscall.CLONE_NEWNS | syscall.CLONE_NEWPID | syscall.CLONE_NEWUTS,
 	}
@@ -43,6 +50,7 @@ func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
 	return cmd, writePipe
 }
 
+//NewPipe 创建父子进程间的通信管道
 func NewPipe() (*os.File, *os.File, error) {
 	read, write, err := os.Pipe()
 	if err != nil {

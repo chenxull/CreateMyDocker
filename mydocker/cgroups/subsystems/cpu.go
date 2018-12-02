@@ -13,7 +13,7 @@ type CpuSubSystem struct {
 }
 
 func (s *CpuSubSystem) Set(cgroupPath string, res *ResourceConfig) error {
-	if subsysCgroupPath, err := GetCgroupPath(s.Name(), cgroupPath, true); err != nil {
+	if subsysCgroupPath, err := GetCgroupPath(s.Name(), cgroupPath, true); err == nil {
 		if res.CpuShare != "" {
 			if err := ioutil.WriteFile(path.Join(subsysCgroupPath, "cpu.shares"), []byte(res.MemoryLimit), 0644); err != nil {
 				return fmt.Errorf("set cgroup cpu shares fail %v", err)

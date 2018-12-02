@@ -12,17 +12,20 @@ import (
 	log "github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/Sirupsen/logrus"
 )
 
-func RunContainerInitProcess(command string, args []string) error {
+/*
+RunContainerInitProcess读取父进程传递过来的参数后，在子进程内进行了执行
+*/
+func RunContainerInitProcess() error {
 
 	cmdArray := readUserCommand()
 	if cmdArray == nil || len(cmdArray) == 0 {
 		return fmt.Errorf("Run container get user command error ,cmdArray is nil")
 	}
-	fmt.Printf("DEBUG::Run container get user command : %s", cmdArray)
-	//logrus.Infof("command 2 %s", command)
+	fmt.Printf("DEBUG::Run container get user command : %s\n", cmdArray)
 
 	defaultMountFlags := syscall.MS_NOEXEC | syscall.MS_NOSUID | syscall.MS_NODEV
 	syscall.Mount("proc", "/proc", "proc", uintptr(defaultMountFlags), "")
+
 	//argv := []string{command}
 	//调用LookPath可以在系统的PATH里面寻找命令的绝对路径
 	path, err := exec.LookPath(cmdArray[0])
@@ -31,7 +34,7 @@ func RunContainerInitProcess(command string, args []string) error {
 		return err
 	}
 	log.Infof("Find path %s", path)
-	if err := syscall.Exec(command, cmdArray[0:], os.Environ()); err != nil {
+	if err := syscall.Exec(path, cmdArray[0:], os.Environ()); err != nil {
 		logrus.Error(err.Error())
 	}
 	return nil
@@ -42,6 +45,7 @@ func readUserCommand() []string {
 	//uintptr指的就是index为3的文件描述符，也就是传递过来的管道的一端
 	pipe := os.NewFile(uintptr(3), "pipe")
 	msg, err := ioutil.ReadAll(pipe)
+	fmt.Println("Pipe::recive pipe Command\n ")
 	if err != nil {
 		log.Errorf("init read pipe error %v", err)
 		return nil

@@ -1,6 +1,8 @@
 package cgroups
 
 import (
+	"fmt"
+
 	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/cgroups/subsystems"
 	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/Sirupsen/logrus"
 )
@@ -32,6 +34,7 @@ func (c *CgroupManager) Apply(pid int) error {
 //Set 设置各个Subsystem挂载中的cgroup资源限制
 func (c *CgroupManager) Set(res *subsystems.ResourceConfig) error {
 	for _, subSysIns := range subsystems.SubsystemsIns {
+		fmt.Printf("CgroupManager::c.Path : %s\n", c.Path)
 		subSysIns.Set(c.Path, res)
 	}
 	return nil
