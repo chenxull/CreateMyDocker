@@ -44,7 +44,7 @@ func (s *MemorySubSystem) Apply(cgroupPath string, pid int) error {
 		if err := ioutil.WriteFile(path.Join(subsysCgroupPath, "tasks"), []byte(strconv.Itoa(pid)), 0644); err != nil {
 			return fmt.Errorf("set cgroup proc fail %v", err)
 		}
-		fmt.Println("apply memorr limit successful!\n ")
+		fmt.Println("apply memory limit successful!\n ")
 		return nil
 	} else {
 		return nil

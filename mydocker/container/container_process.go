@@ -47,6 +47,11 @@ func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
 		cmd.Stderr = os.Stderr
 	}
 	cmd.ExtraFiles = []*os.File{readPipe}
+	mntURL := "/root/mnt/"
+	rootURL := "/root/"
+	NewWorkSpace(rootURL, mntURL)
+	//rootfs的挂载目录
+	cmd.Dir = mntURL
 	return cmd, writePipe
 }
 
@@ -57,4 +62,99 @@ func NewPipe() (*os.File, *os.File, error) {
 		return nil, nil, err
 	}
 	return read, write, err
+}
+
+//NewWorkSpace 用来创建容器的文件系统
+func NewWorkSpace(rootURL string, mntURL string) {
+	CreateReadOnlyLayer(rootURL)
+	CreateWriteLayer(rootURL)
+	CreateMountPoint(rootURL, mntURL)
+}
+
+// CreateReadOnlyLayer 将busybox.tar解压到busybox目录下，作为容器的只读层readonlylayer
+func CreateReadOnlyLayer(rootURL string) {
+	busyboxURL := rootURL + "busybox/"
+	busyboxTarURL := rootURL + "busybox.tar"
+	exist, err := PathExists(busyboxURL)
+
+	if err != nil {
+		log.Infof("Fail to judge whether dir %s exists. %v ", busyboxURL, err)
+	}
+	//创建busyboxURL文件夹并将tar文件解压到此busybox中，作为ReadOnlyLayer
+	if exist == false {
+		if err := os.Mkdir(busyboxURL, 0777); err != nil {
+			log.Errorf("Mkdir dir %s error. %v", busyboxURL, err)
+		}
+		if _, err := exec.Command("tar", "-xvf", busyboxTarURL, "-C", busyboxURL).CombinedOutput(); err != nil {
+			log.Errorf("unTar dir %s error %v", busyboxTarURL, err)
+		}
+	}
+}
+
+// CreateWriteLayer 创建一个名为writeLayer的文件夹作为容器唯一的可写层writeLayer
+func CreateWriteLayer(rootURL string) {
+	writeURL := rootURL + "writeLayer/"
+	if err := os.Mkdir(writeURL, 0777); err != nil {
+		log.Errorf("Mkdir dir %s error .%v", writeURL, err)
+	}
+}
+
+// CreateMountPoint 使用mnt文件夹作为ReadOnlyLayer和WriteLayer的挂载点
+func CreateMountPoint(rootURL string, mntURL string) {
+	//创建mnt文件夹，作为挂载点
+	if err := os.Mkdir(mntURL, 0777); err != nil {
+		log.Errorf("Mkdir dir %s error.%v", mntURL, err)
+	}
+
+	//需要挂载的文件夹,将writeLayer写在前面，此时的一些读写操作都是在writelayer上进行的
+	dirs := "dirs=" + rootURL + "writeLayer:" + rootURL + "busybox"
+	cmd := exec.Command("mount", "-t", "aufs", "-o", dirs, "none", mntURL)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Println("挂载文件失败")
+		log.Errorf("%v", err)
+	}
+}
+
+//DeleteWorkSpace 当容器退出时，删除aufs文件系统
+func DeleteWorkSpace(rootURL string, mntURL string) {
+	DeleteMountPoint(rootURL, mntURL)
+	DeleteWriteLayer(rootURL)
+}
+
+//DeleteMountPoint 结束文件的挂载
+func DeleteMountPoint(rootURL string, mntURL string) {
+	cmd := exec.Command("umount", mntURL)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Println("umount失败")
+		log.Errorf("%v", err)
+	}
+	if err := os.RemoveAll(mntURL); err != nil {
+		fmt.Println("删除mntURL失败")
+		log.Errorf("Remove dir %s error %v", mntURL, err)
+	}
+}
+
+//DeleteWriteLayer 删除writeLayer文件夹
+func DeleteWriteLayer(rootURL string) {
+	writeURL := rootURL + "writeLayer/"
+	if err := os.RemoveAll(writeURL); err != nil {
+		fmt.Println("删除writeLayer文件夹失败")
+		log.Errorf("Remove dir %s error %v", writeURL, err)
+	}
+}
+
+//PathExists 判断文件路径是否存在
+func PathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, nil
 }

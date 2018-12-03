@@ -27,7 +27,7 @@ func Run(tty bool, comArray []string, res *subsystems.ResourceConfig) {
 	}
 	//use mydocker-cgroup as cgroup name
 	//创建cgroup manager，并通过调用set和apply设置资源限制并使限制在容器上生效
-	cgroupManager := cgroups.NewCgroupManager("mydocker-cgroup2")
+	cgroupManager := cgroups.NewCgroupManager("mydocker-cgroup3")
 
 	//设置容器资源限制
 	fmt.Println("Run::init Cgrouplimit ")
@@ -37,6 +37,10 @@ func Run(tty bool, comArray []string, res *subsystems.ResourceConfig) {
 	defer cgroupManager.Destory()
 	sendInitCommand(comArray, wirtePipe)
 	parent.Wait()
+	mntURL := "/root/mnt/"
+	rootURL := "/root/"
+	container.DeleteWorkSpace(rootURL, mntURL)
+
 	os.Exit(-1)
 }
 
