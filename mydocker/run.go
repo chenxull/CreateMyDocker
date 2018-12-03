@@ -13,10 +13,10 @@ import (
 	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/container"
 )
 
-func Run(tty bool, comArray []string, res *subsystems.ResourceConfig) {
+func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, volume string) {
 
 	fmt.Println("ready to create NewParentProcess\n")
-	parent, wirtePipe := container.NewParentProcess(tty)
+	parent, wirtePipe := container.NewParentProcess(tty, volume)
 	fmt.Println("NewParentProcess is Created\n")
 	if parent == nil {
 		log.Error("New parent process error")
@@ -39,7 +39,7 @@ func Run(tty bool, comArray []string, res *subsystems.ResourceConfig) {
 	parent.Wait()
 	mntURL := "/root/mnt/"
 	rootURL := "/root/"
-	container.DeleteWorkSpace(rootURL, mntURL)
+	container.DeleteWorkSpace(rootURL, mntURL, volume)
 
 	os.Exit(-1)
 }

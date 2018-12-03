@@ -26,7 +26,18 @@
 
 ### 2018年12月3日
 
+#### aufs文件系统 
 mydocker增加了aufs文件系统功能，使用busybox作为最底层的基础镜像。通过mydocker run -ti sh，启动的镜像将以busybox最为基础镜像，具体aufs文件系统的实现如下：
 
 - 在启动容器时，通过解压busybox.tar到文件夹/root/busybox/中来作为基础镜像是只读层，同时创建/root/writeLayer/文件夹作为镜像的读写层，创建/root/mnt作为busybox和writeLayer的挂载点，通过命令```mount -t aufs -o /root/writeLayer:/root/busybox none /root/mnt```，将busybox和writeLayer挂载到mnt文件夹中。在实际的使用过程中，对容器镜像文件的修改只会体现在writeLayer中，对busybox无影响。
 - 在容器退出时，会自动删除writeLayer和container-initLayer删除,在我的实现中就是将mnt和writeLayer文件夹删除。
+
+#### 挂载volume
+上述工作实现了容器和镜像的分离，缺少数据的持久保存.目前实现了数据的持久化存储，通过挂载数据卷的形式，将宿主机指定的文件夹挂载到容器内部制定的文件夹中。
+实现指令如下：
+```sudo ./mydocker run -ti -v /root/volume:/containerVolume ```
+将宿主机/root/volume文件夹挂载到容器mnt/containerVolume中
+
+#### 打包镜像
+
+commit.go用来打包镜像

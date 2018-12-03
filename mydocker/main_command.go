@@ -32,6 +32,10 @@ var runCommand = cli.Command{
 			Name:  "cpushare",
 			Usage: "cpushare limit",
 		},
+		cli.StringFlag{
+			Name:  "v",
+			Usage: "volume",
+		},
 	},
 	/* 这里是 run 命令执行的真正函数。
 	1. 判断参数是否包含 command
@@ -50,13 +54,14 @@ var runCommand = cli.Command{
 		}
 		tty := context.Bool("ti")
 
+		volume := context.String("v")
 		resconfig := &subsystems.ResourceConfig{
 			MemoryLimit: context.String("m"),
 			CpuSet:      context.String("cpuset"),
 			CpuShare:    context.String("cpushare"),
 		}
 		fmt.Println("runCommand is starting \n")
-		Run(tty, cmdArray, resconfig)
+		Run(tty, cmdArray, resconfig, volume)
 		return nil
 	},
 }
@@ -76,5 +81,19 @@ var initCommand = cli.Command{
 
 		err := container.RunContainerInitProcess()
 		return err
+	},
+}
+
+var commitCommand = cli.Command{
+	Name:  "commit",
+	Usage: "commit a container into image",
+	Action: func(context *cli.Context) error {
+		if len(context.Args()) < 1 {
+
+			return fmt.Errorf("Missing container name")
+		}
+		imageName := context.Args().Get(0)
+		commitContainer(imageName)
+		return nil
 	},
 }

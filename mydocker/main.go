@@ -20,6 +20,7 @@ func main() {
 	app.Commands = []cli.Command{
 		initCommand,
 		runCommand,
+		commitCommand,
 	}
 	fmt.Println("main::after Commands\n")
 	// Init log
