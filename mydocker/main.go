@@ -25,6 +25,7 @@ func main() {
 		logCommand,
 		execCommand,
 		stopCommand,
+		removeCommand,
 	}
 	fmt.Println("main::after Commands\n")
 	// Init log
