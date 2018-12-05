@@ -22,11 +22,9 @@ func RunContainerInitProcess() error {
 	if cmdArray == nil || len(cmdArray) == 0 {
 		return fmt.Errorf("Run container get user command error ,cmdArray is nil")
 	}
-	fmt.Printf("DEBUG::Run container get user command : %s\n", cmdArray)
 
-	//defaultMountFlags := syscall.MS_NOEXEC | syscall.MS_NOSUID | syscall.MS_NODEV
-	//syscall.Mount("proc", "/proc", "proc", uintptr(defaultMountFlags), "")
 	setUpMount()
+
 	//argv := []string{command}
 	//调用LookPath可以在系统的PATH里面寻找命令的绝对路径
 	path, err := exec.LookPath(cmdArray[0])
