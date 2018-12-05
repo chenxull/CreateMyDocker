@@ -1,4 +1,4 @@
-# 重头完整的写一个精简版的docker
+# 精简版docker
 
 - 开发环境:ubuntu14.04 ; 内核版本 : 3.13
 - 同步环境: 在ubuntu中进行开发，使用git+github保持mac端的代码同步
@@ -10,6 +10,16 @@
 3. 在ubuntu中初步使用git+github时，需要将git生成的本地密钥添加到github中，同时还要给本机设置一个用户名和邮箱，在每次上传文件到github时会要去输入github的账号和密码，需要将个人的账号信息添加到相应的文件中，即可解决这个问题。
 4. 从github上下载的代码包之间的应用关系很容器出问题，因为你自己项目所建立的包目录结构有很大的出入，需要手动调整一下包的目录接口，才能使引用关系正确。
 
+
+## 支持的指令
+
+```
+mydocker run -ti -v 
+mydocker run -ti -m 
+mydocker run -ti -cpuset
+mydocker run -ti -cpushare 
+
+```
 ## 开发过程
 
 ### 2018年11月30日
@@ -41,3 +51,7 @@ mydocker增加了aufs文件系统功能，使用busybox作为最底层的基础�
 #### 打包镜像
 
 commit.go用来打包镜像
+
+#### 容器后台运行
+
+使用```mydocker run -d top```可以让top在后台运行,不过这个时候会有个bug,之前的代码在容器结束的时候会执行删除相应的writeLayer的操作,进程top在后台运行,mydocket退出后也尝试将top的writeLayer层给删除,会报```{"level":"error","msg":"Remove dir /root/writeLayer/ error remove /root/writeLayer/: device or resource busy","time":"2018-12-03T05:31:57-08:00"}```错误.

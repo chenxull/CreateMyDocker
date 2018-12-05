@@ -21,6 +21,7 @@ func main() {
 		initCommand,
 		runCommand,
 		commitCommand,
+		listCommand,
 	}
 	fmt.Println("main::after Commands\n")
 	// Init log

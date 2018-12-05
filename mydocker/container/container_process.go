@@ -10,6 +10,23 @@ import (
 	log "github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/Sirupsen/logrus"
 )
 
+var (
+	RUNNING             string = "running"
+	STOP                string = "stopped"
+	Exit                string = "exited"
+	DefaultInfoLocation string = "/var/run/mydocker/%s/"
+	ConfigName          string = "config.json"
+)
+
+type ContainerInfo struct {
+	Pid        string `json:"pid"`
+	Id         string `json:"id"`
+	Name       string `json:"name"`
+	Command    string `json:"command"`
+	CreateTime string `json:"createTime"`
+	Status     string `json:"status"`
+}
+
 /*
 这里是父进程，也就是当前进程执行的内容，根据上一章介绍的内容，应该比较容易明白。
  1. 这里的／proc/self/exe 调用中，／ proc/self ／指的是当前运行进程自己的环境， 调用了自己，使用这种方式对创建出来的进程进行初始化
