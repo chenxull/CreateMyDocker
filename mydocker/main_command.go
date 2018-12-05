@@ -152,6 +152,7 @@ var execCommand = cli.Command{
 		if len(context.Args()) < 2 {
 			return fmt.Errorf("missing container name or command")
 		}
+
 		containerName := context.Args().Get(0)
 
 		var commandArray []string
@@ -160,6 +161,19 @@ var execCommand = cli.Command{
 		}
 
 		ExecContainer(containerName, commandArray)
+		return nil
+	},
+}
+
+var stopCommand = cli.Command{
+	Name:  "stop",
+	Usage: "stop a container",
+	Action: func(context *cli.Context) error {
+		if len(context.Args()) < 1 {
+			return fmt.Errorf("missing container name")
+		}
+		containerName := context.Args().Get(0)
+		stopContainer(containerName)
 		return nil
 	},
 }

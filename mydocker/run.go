@@ -96,14 +96,14 @@ func recodeContainerInfo(containerPID int, commandArray []string, containerName 
 	jsonStr := string(jsonBytes)
 
 	//完整的存储容器信息的路径
-	dirUrl := fmt.Sprintf(container.DefaultInfoLocation, containerName)
-	if err := os.MkdirAll(dirUrl, 0622); err != nil {
-		log.Errorf("Mkdir error %s error %v", dirUrl, err)
+	dirURL := fmt.Sprintf(container.DefaultInfoLocation, containerName)
+	if err := os.MkdirAll(dirURL, 0622); err != nil {
+		log.Errorf("Mkdir error %s error %v", dirURL, err)
 		return "", err
 	}
 
 	//创建最终的配置文件--config.json文件
-	fileName := dirUrl + "/" + container.ConfigName
+	fileName := dirURL + "/" + container.ConfigName
 	file, err := os.Create(fileName)
 	defer file.Close()
 	if err != nil {

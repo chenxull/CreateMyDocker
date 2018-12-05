@@ -13,6 +13,7 @@ import (
 	_ "github.com/chenxull/mydocker/CreateMyDocker/mydocker/nsenter"
 )
 
+//ENV_EXEC_PID C语言中使用的环境变量
 const ENV_EXEC_PID = "mydocker_pid"
 const ENV_EXEC_CMD = "mydocker_cmd"
 
