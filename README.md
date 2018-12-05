@@ -57,7 +57,18 @@ commit.go用来打包镜像
 使用```mydocker run -d top```可以让top在后台运行,不过这个时候会有个bug,之前的代码在容器结束的时候会执行删除相应的writeLayer的操作,进程top在后台运行,mydocket退出后也尝试将top的writeLayer层给删除,会报```{"level":"error","msg":"Remove dir /root/writeLayer/ error remove /root/writeLayer/: device or resource busy","time":"2018-12-03T05:31:57-08:00"}```错误.
 
 
+### 2018年12月4日
+
+#### 增加ps命令
+当容器在后台运行时,可以使用```mydocker ps```查看容器的运行状态
+
+#### 增加logs命令
+通过```mydocker logs containerNmae``` 查看具体容器的日志信息
+
+#### 增加exec命令
+通过```mydocker exec containerName  ```可以进入到在后台运行的容器中,对其进行操作
 ## 待修复的BUG
 
 * [] 在是容器在后台运行时,mydocker尝试去删除writeLayer层.正确逻辑mydocker不会去尝试删除
 * [] 错误日志不清晰,需要整理
+* [] 当容器在后台运行时,如果使用kill PID的方式关闭这个容器进程,由于其/var/run/docker/containerName 文件夹的存在,依旧可以使用mydocker ps查看到容器的信息,实际上这个容器已经不存在

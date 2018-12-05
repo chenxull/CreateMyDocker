@@ -1,10 +1,7 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"os"
-	"text/tabwriter"
 
 	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/cgroups/subsystems"
 	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/container"
@@ -142,94 +139,27 @@ var listCommand = cli.Command{
 	},
 }
 
-// ListContainers ps 列出容器的信息
-func ListContainers() {
-
-	//找到存储容器信息的路径/var/run/mydocker
-	dirURL := fmt.Sprintf(container.DefaultInfoLocation, "")
-	dirURL = dirURL[:len(dirURL)-1]
-
-	//获得/var/run/mydocker目录下所有文件名
-	files, err := ioutil.ReadDir(dirURL)
-	if err != nil {
-		log.Errorf("Read dir %s error %v", dirURL, err)
-		return
-	}
-
-	var containers []*container.ContainerInfo
-
-	for _, file := range files {
-		tmpContainer, err := getContainerInfo(file)
-		if err != nil {
-			log.Errorf("Get container info error %v", err)
-			continue
+//这个的执行过程是一个难点
+var execCommand = cli.Command{
+	Name:  "exec",
+	Usage: "exec a command into container",
+	Action: func(context *cli.Context) error {
+		//this is for callback,第二次进入本程序执行exec的时候,如果已经制定了环境变量,说明c代码已经执行,直接返回就行了,避免重复调用
+		if os.Getenv(ENV_EXEC_PID) != "" {
+			log.Infof("pid callback pid %s", os.Getgid())
+			return nil
 		}
-		containers = append(containers, tmpContainer)
-	}
+		if len(context.Args()) < 2 {
+			return fmt.Errorf("missing container name or command")
+		}
+		containerName := context.Args().Get(0)
 
-	//格式化打印
-	w := tabwriter.NewWriter(os.Stdout, 12, 1, 3, ' ', 0)
-	fmt.Fprint(w, "ID\tNAME\tPID\tSTATUS\tCOMMAND\tCREATED\n")
-	for _, item := range containers {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
-			item.Id,
-			item.Name,
-			item.Pid,
-			item.Status,
-			item.Command,
-			item.CreateTime)
-	}
+		var commandArray []string
+		for _, arg := range context.Args().Tail() {
+			commandArray = append(commandArray, arg)
+		}
 
-	if err := w.Flush(); err != nil {
-		log.Errorf("Flush error %v", err)
-		return
-	}
-}
-
-func getContainerInfo(file os.FileInfo) (*container.ContainerInfo, error) {
-	containerName := file.Name()
-	//根据文件名生成文件绝对路径
-	configFileDir := fmt.Sprintf(container.DefaultInfoLocation, containerName)
-	configFileDir = configFileDir + container.ConfigName
-
-	//读取json文件的内容
-	content, err := ioutil.ReadFile(configFileDir)
-	if err != nil {
-		log.Errorf("Read file %s error %v", configFileDir, err)
-		return nil, err
-	}
-
-	var containerInfo container.ContainerInfo
-	if err := json.Unmarshal(content, &containerInfo); err != nil {
-		log.Errorf("Json Unmarshal error %v", err)
-		return nil, err
-	}
-	return &containerInfo, nil
-
-}
-
-// logContainer 打印日志信息
-func logContainer(containerName string) {
-
-	dirURL := fmt.Sprintf(container.DefaultInfoLocation, containerName)
-	logFileLocation := dirURL + container.ContainerLogFile
-
-	//打开日志文件
-	file, err := os.Open(logFileLocation)
-	defer file.Close()
-	if err != nil {
-		log.Errorf("Log contianer open file %s error %v", logFileLocation, err)
-		return
-	}
-
-	//读取日志文件内容
-	content, err := ioutil.ReadAll(file)
-	if err != nil {
-		log.Errorf("Log container read file %s error %v", file, err)
-		return
-	}
-
-	//打印日志
-	fmt.Fprint(os.Stdout, string(content))
-
+		ExecContainer(containerName, commandArray)
+		return nil
+	},
 }
