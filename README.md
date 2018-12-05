@@ -13,13 +13,56 @@
 
 ## 支持的指令
 
+### 可交互 -ti
 ```
-mydocker run -ti -v 
-mydocker run -ti -m 
-mydocker run -ti -cpuset
-mydocker run -ti -cpushare 
+mydocker run -ti ls
+mydocker run -ti -v /root/from1:/to1 
+mydocker run -ti -m 100m  stress --vm-bytes 200m --vm-keep -m 1  // 限制内存100m
+mydocker run -ti -cpuset 
+mydocker run -ti -cpushare 512 stress --vm-bytes 200m --vm-keep -m 1 // 限制cpushare 
 
 ```
+
+
+### 后台执行 -d
+
+- 以后台运行的方式从镜像busybox启动容器container1 ,并将容器内部的数据卷挂载在宿主机/root/from1目录中,执行top指令
+
+```
+mydocker run -d --name container1 -v /root/from1:/to1 busybox top  
+```
+
+- 查看指定容器的日志
+
+```
+mydocker logs containerName
+```
+
+- 查看正在运行容器的状态
+
+```
+mydcoker ps 
+```
+
+- 进入到处于后台运行状态的容器,对容器进行操作
+
+```
+mydocker exec containerNmae sh
+```
+
+- 终止容器名为contaierName容器的运行
+
+```
+mydocker stop containerName 
+
+```
+
+- 删除处于stop状态的容器
+
+```
+mydocker rm containerName
+```
+
 ## 开发过程
 
 ### 2018年11月30日
@@ -72,3 +115,25 @@ commit.go用来打包镜像
 * [] 在是容器在后台运行时,mydocker尝试去删除writeLayer层.正确逻辑mydocker不会去尝试删除
 * [] 错误日志不清晰,需要整理
 * [] 当容器在后台运行时,如果使用kill PID的方式关闭这个容器进程,由于其/var/run/docker/containerName 文件夹的存在,依旧可以使用mydocker ps查看到容器的信息,实际上这个容器已经不存在
+
+
+### 2018年12月5日
+
+#### 存在问题
+
+之前一直尝试在容器的/to文件夹中写入文件,想在WriteLayer中看到修改的文件,但是一直看不到,在容器其他文件中写入文件后都可以在writeLayer中看到修改信息.
+容器中的/to文件夹挂载到了宿主机/root/from文件中,在/to中修改的文件都可以在from中看到,但是在WriteLayer中却看不到.
+
+这个bug需要修复
+
+#### 容器拥有独立隔离的文件系统
+
+#### 增加从镜像启动容器
+
+``` mydocker run -d --name container -v /root/from1:/to1 busybox top ```
+
+#### 将容器打包成镜像
+
+```mydocker run commit container image``` 即可将容器container打包成镜像image.
+
+```mydocker run -d --name container2 -v /root/from2:/to2 image top``` 通过镜像image启动容器container2
