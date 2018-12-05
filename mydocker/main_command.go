@@ -119,15 +119,30 @@ var commitCommand = cli.Command{
 	},
 }
 
+var logCommand = cli.Command{
+	Name:  "logs",
+	Usage: "print logs a container",
+	Action: func(context *cli.Context) error {
+		if len(context.Args()) < 1 {
+			return fmt.Errorf("Please input your container name")
+		}
+		containerName := context.Args().Get(0)
+		logContainer(containerName)
+		return nil
+	},
+}
+
 var listCommand = cli.Command{
 	Name:  "ps",
 	Usage: "list all the containers",
 	Action: func(context *cli.Context) error {
+
 		ListContainers()
 		return nil
 	},
 }
 
+// ListContainers ps 列出容器的信息
 func ListContainers() {
 
 	//找到存储容器信息的路径/var/run/mydocker
@@ -190,5 +205,31 @@ func getContainerInfo(file os.FileInfo) (*container.ContainerInfo, error) {
 		return nil, err
 	}
 	return &containerInfo, nil
+
+}
+
+// logContainer 打印日志信息
+func logContainer(containerName string) {
+
+	dirURL := fmt.Sprintf(container.DefaultInfoLocation, containerName)
+	logFileLocation := dirURL + container.ContainerLogFile
+
+	//打开日志文件
+	file, err := os.Open(logFileLocation)
+	defer file.Close()
+	if err != nil {
+		log.Errorf("Log contianer open file %s error %v", logFileLocation, err)
+		return
+	}
+
+	//读取日志文件内容
+	content, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Errorf("Log container read file %s error %v", file, err)
+		return
+	}
+
+	//打印日志
+	fmt.Fprint(os.Stdout, string(content))
 
 }

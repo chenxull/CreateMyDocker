@@ -16,6 +16,7 @@ var (
 	Exit                string = "exited"
 	DefaultInfoLocation string = "/var/run/mydocker/%s/"
 	ConfigName          string = "config.json"
+	ContainerLogFile    string = "contiainer.log"
 )
 
 type ContainerInfo struct {
@@ -39,21 +40,20 @@ type ContainerInfo struct {
 */
 
 //NewParentProcess 父进程
-func NewParentProcess(tty bool, volume string) (*exec.Cmd, *os.File) {
+func NewParentProcess(tty bool, volume string, containerName string) (*exec.Cmd, *os.File) {
 
 	readPipe, writePipe, err := NewPipe()
 	if err != nil {
 		log.Errorf("New Pipe error %v", err)
 		return nil, nil
 	}
-	fmt.Println("Creating ParentProcess NO.1\n ")
-	//cmd := exec.Command("/proc/self/exe", "init") // 怎么通过这个init去调用initCommand？/proc/se;f/exe就是调用自己，发送init参数，调用initcommand
+
+	// 怎么通过这个init去调用initCommand？/proc/se;f/exe就是调用自己，发送init参数，调用initcommand
 	initCmd, err := os.Readlink("/proc/self/exe")
 	if err != nil {
 		log.Errorf("get init process error %v", err)
 	}
 	cmd := exec.Command(initCmd, "init")
-	fmt.Println("Creating ParentProcess NO.2\n ")
 
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWIPC | syscall.CLONE_NEWNET | syscall.CLONE_NEWNS | syscall.CLONE_NEWPID | syscall.CLONE_NEWUTS,
@@ -63,6 +63,22 @@ func NewParentProcess(tty bool, volume string) (*exec.Cmd, *os.File) {
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
+	} else {
+		//生成容器对应目录的文件 /var/run/mydocker/容器名/container.log
+		dirURL := fmt.Sprintf(DefaultInfoLocation, containerName)
+		if err := os.MkdirAll(dirURL, 0622); err != nil {
+			log.Errorf("NewParentProcess mkdir %s error %v ", dirURL, err)
+			return nil, nil
+		}
+		stdLogFilePath := dirURL + ContainerLogFile
+		stdLogFile, err := os.Create(stdLogFilePath)
+		if err != nil {
+			log.Errorf("NewParentProcess create file %s error %v", stdLogFilePath, err)
+			return nil, nil
+		}
+		//把生成好的文件赋给stdout,此时容器内的标准输出重定向到这个文件中
+		cmd.Stdout = stdLogFile
+
 	}
 	cmd.ExtraFiles = []*os.File{readPipe}
 	mntURL := "/root/mnt/"

@@ -20,7 +20,7 @@ import (
 //Run 容器启动入口
 func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, volume string, containerName string) {
 
-	parent, wirtePipe := container.NewParentProcess(tty, volume)
+	parent, wirtePipe := container.NewParentProcess(tty, volume, containerName)
 	fmt.Println("父进程创建成功")
 	if parent == nil {
 		log.Error("New parent process error")
