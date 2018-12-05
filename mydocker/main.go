@@ -27,7 +27,7 @@ func main() {
 		stopCommand,
 		removeCommand,
 	}
-	fmt.Println("main::after Commands\n")
+
 	// Init log
 	app.Before = func(content *cli.Context) error {
 		//Log as JSON instead of the defaul ASCII formatter.

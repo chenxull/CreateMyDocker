@@ -18,12 +18,17 @@ import (
 )
 
 //Run 容器启动入口
-func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, volume string, containerName string) {
+func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, volume string, containerName string, imageName string) {
 
-	parent, wirtePipe := container.NewParentProcess(tty, volume, containerName)
-	fmt.Println("父进程创建成功")
+	containerID := randStringBytes(10)
+	if containerName == "" {
+		containerName = containerID
+	}
+
+	parent, wirtePipe := container.NewParentProcess(tty, volume, containerName, imageName)
+
 	if parent == nil {
-		log.Error("New parent process error")
+		log.Errorf("New parent process error")
 		return
 	}
 
@@ -32,7 +37,7 @@ func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, volume str
 	}
 
 	//记录容器信息
-	containerName, err := recodeContainerInfo(parent.Process.Pid, comArray, containerName)
+	containerName, err := recodeContainerInfo(parent.Process.Pid, comArray, containerName, containerID, volume)
 	if err != nil {
 		log.Errorf("Record container info error %v", err)
 		return
@@ -40,7 +45,7 @@ func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, volume str
 
 	//use mydocker-cgroup as cgroup name
 	//创建cgroup manager，并通过调用set和apply设置资源限制并使限制在容器上生效
-	cgroupManager := cgroups.NewCgroupManager("mydocker-cgroup3")
+	cgroupManager := cgroups.NewCgroupManager("mydocker-cgroup")
 
 	//设置容器资源限制
 	fmt.Println("初始化Cgroup")
@@ -56,20 +61,15 @@ func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, volume str
 		//这是init进程接管这个子进程
 		parent.Wait()
 		deleteContainerInfo(containerName)
+		container.DeleteWorkSpace(volume, containerName)
 	}
 
-	mntURL := "/root/mnt/"
-	rootURL := "/root/"
-	container.DeleteWorkSpace(rootURL, mntURL, volume)
-
-	os.Exit(-1)
 }
 
 //recodeContainerInfo 记录容器信息
-func recodeContainerInfo(containerPID int, commandArray []string, containerName string) (string, error) {
+func recodeContainerInfo(containerPID int, commandArray []string, containerName string, id, volume string) (string, error) {
 
 	//生成容器的10位数字ID
-	id := randStringBytes(10)
 	createTime := time.Now().Format("2006/1/2 15:04:05")
 	command := strings.Join(commandArray, "")
 	//没有制定容器名时一ID替代
@@ -85,6 +85,7 @@ func recodeContainerInfo(containerPID int, commandArray []string, containerName 
 		CreateTime: createTime,
 		Status:     container.RUNNING,
 		Name:       containerName,
+		Volume:     volume,
 	}
 
 	//将容器信息的对象json序列化成为字符串
@@ -139,7 +140,7 @@ func randStringBytes(n int) string {
 //sendInitCommand 将信息发送给子进程
 func sendInitCommand(comArray []string, wirtePipe *os.File) {
 	command := strings.Join(comArray, " ")
-	log.Infof("SendPipe::command all is %s", command)
+	log.Infof("command all is %s", command)
 	wirtePipe.WriteString(command)
 	wirtePipe.Close()
 }

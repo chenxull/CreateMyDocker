@@ -63,8 +63,8 @@ var runCommand = cli.Command{
 			cmdArray = append(cmdArray, arg)
 		}
 
-		//imageName := cmdArray[0]
-		//cmdArray = cmdArray[0]
+		imageName := cmdArray[0]
+		cmdArray = cmdArray[1:]
 		createTty := context.Bool("ti")
 		detach := context.Bool("d")
 
@@ -79,7 +79,8 @@ var runCommand = cli.Command{
 		}
 		contaienrName := context.String("name")
 		fmt.Println("runCommand is starting \n")
-		Run(createTty, cmdArray, resconfig, volume, contaienrName)
+
+		Run(createTty, cmdArray, resconfig, volume, contaienrName, imageName)
 		return nil
 	},
 }
@@ -104,14 +105,15 @@ var initCommand = cli.Command{
 
 var commitCommand = cli.Command{
 	Name:  "commit",
-	Usage: "commit a container into image",
+	Usage: "commit a container into image,You need to add two param containerName and imageName",
 	Action: func(context *cli.Context) error {
-		if len(context.Args()) < 1 {
+		if len(context.Args()) < 2 {
 
 			return fmt.Errorf("Missing container name")
 		}
-		imageName := context.Args().Get(0)
-		commitContainer(imageName)
+		containerName := context.Args().Get(0)
+		imageName := context.Args().Get(1)
+		commitContainer(containerName, imageName)
 		return nil
 	},
 }
