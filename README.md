@@ -138,3 +138,22 @@ commit.go用来打包镜像
 ```mydocker run commit container image``` 即可将容器container打包成镜像image.
 
 ```mydocker run -d --name container2 -v /root/from2:/to2 image top``` 通过镜像image启动容器container2
+
+
+### 2018年12月6日
+
+#### 增加启动时传入环境变量功能 -e
+
+- 通过一下命令在后台启动容器
+
+``` mydocker run -d --name container -e chenxu=good -e luck=chenxu busybox top```
+
+- 通过下面命令查看在运行状态容器的相关信息
+ 
+ ```mydocker ps ```
+
+- 通过下面命令进入名为container的容器中,查看环境变量
+
+``` mydocker exec container sh ``` 可以发现启动时传入的环境变量在容器内部生效了.
+
+**到目前为止,基本上实现了单机版本的容器,可以管理容器从启动到删除的整个生命周期,并且多个容器可以并存,使用相同的基础镜像且存储内容互不干扰**

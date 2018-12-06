@@ -43,7 +43,7 @@ type ContainerInfo struct {
 */
 
 //NewParentProcess 父进程
-func NewParentProcess(tty bool, volume, containerName, imageName string) (*exec.Cmd, *os.File) {
+func NewParentProcess(tty bool, volume, containerName, imageName string, envSlice []string) (*exec.Cmd, *os.File) {
 
 	readPipe, writePipe, err := NewPipe()
 	if err != nil {
@@ -84,6 +84,8 @@ func NewParentProcess(tty bool, volume, containerName, imageName string) (*exec.
 
 	}
 	cmd.ExtraFiles = []*os.File{readPipe}
+	//在默认情况下,新启动的进程都是继承父进程的环境变量,这里使用传入的环境变量,os.Envsion()是宿主机的变量
+	cmd.Env = append(os.Environ(), envSlice...)
 	NewWorkSpace(volume, imageName, containerName)
 	//rootfs的挂载目录
 	cmd.Dir = fmt.Sprintf(MntUrl, containerName)

@@ -46,6 +46,10 @@ var runCommand = cli.Command{
 			Name:  "name",
 			Usage: "container name",
 		},
+		cli.StringSliceFlag{
+			Name:  " e",
+			Usage: "set environment",
+		},
 	},
 	/* 这里是 run 命令执行的真正函数。
 	1. 判断参数是否包含 command
@@ -67,6 +71,7 @@ var runCommand = cli.Command{
 		cmdArray = cmdArray[1:]
 		createTty := context.Bool("ti")
 		detach := context.Bool("d")
+		envSlice := context.StringSlice("e")
 
 		if createTty && detach {
 			return fmt.Errorf("ti and d paramter can not both provided")
@@ -80,7 +85,7 @@ var runCommand = cli.Command{
 		contaienrName := context.String("name")
 		fmt.Println("runCommand is starting \n")
 
-		Run(createTty, cmdArray, resconfig, volume, contaienrName, imageName)
+		Run(createTty, cmdArray, resconfig, volume, contaienrName, imageName, envSlice)
 		return nil
 	},
 }
