@@ -116,6 +116,7 @@ func CreateMountPoint(containerName, imageName string) error {
 	tmpImageLocation := RootUrl + "/" + imageName
 	mntURL := fmt.Sprintf(MntUrl, containerName)
 	dirs := "dirs=" + tmpWriteLayer + ":" + tmpImageLocation
+	log.Infof("tmpWriteLayer is %s", tmpWriteLayer)
 
 	_, err := exec.Command("mount", "-t", "aufs", "-o", dirs, "none", mntURL).CombinedOutput()
 
