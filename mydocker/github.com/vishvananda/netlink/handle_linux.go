@@ -5,8 +5,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/vishvananda/netlink/nl"
-	"github.com/vishvananda/netns"
+	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/vishvananda/netlink/nl"
+	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/vishvananda/netns"
 )
 
 // Empty handle used by the netlink package methods

@@ -26,6 +26,7 @@ func main() {
 		execCommand,
 		stopCommand,
 		removeCommand,
+		networkCommand,
 	}
 
 	// Init log
@@ -37,7 +38,7 @@ func main() {
 
 		return nil
 	}
-	fmt.Println("main::starting\n")
+	//fmt.Println("main::starting\n")
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}

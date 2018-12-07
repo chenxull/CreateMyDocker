@@ -7,8 +7,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/vishvananda/netlink/nl"
-	"github.com/vishvananda/netns"
+	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/vishvananda/netlink/nl"
+	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/vishvananda/netns"
 )
 
 // IFA_FLAGS is a u32 attribute.

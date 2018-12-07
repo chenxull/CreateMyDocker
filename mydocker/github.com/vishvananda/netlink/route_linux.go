@@ -5,8 +5,8 @@ import (
 	"net"
 	"syscall"
 
-	"github.com/vishvananda/netlink/nl"
-	"github.com/vishvananda/netns"
+	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/vishvananda/netlink/nl"
+	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/vishvananda/netns"
 )
 
 // RtAttr is shared so it is in netlink_linux.go

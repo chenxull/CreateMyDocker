@@ -1,6 +1,6 @@
 package netlink
 
-import "github.com/vishvananda/netlink/nl"
+import "github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/vishvananda/netlink/nl"
 
 // Family type definitions
 const (

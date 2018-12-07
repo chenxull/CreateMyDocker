@@ -4,7 +4,7 @@ import (
 	"errors"
 	"syscall"
 
-	"github.com/vishvananda/netlink/nl"
+	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/vishvananda/netlink/nl"
 )
 
 // NOTE: function is in here because it uses other linux functions

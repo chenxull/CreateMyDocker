@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/network"
+
 	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/cgroups/subsystems"
 	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/container"
 
@@ -49,6 +51,14 @@ var runCommand = cli.Command{
 		cli.StringSliceFlag{
 			Name:  " e",
 			Usage: "set environment",
+		},
+		cli.StringFlag{
+			Name:  "net",
+			Usage: "contaienr network",
+		},
+		cli.StringSliceFlag{
+			Name:  "p",
+			Usage: "port mapping",
 		},
 	},
 	/* 这里是 run 命令执行的真正函数。
@@ -196,5 +206,65 @@ var removeCommand = cli.Command{
 		containerName := context.Args().Get(0)
 		removeContainer(containerName)
 		return nil
+	},
+}
+
+var networkCommand = cli.Command{
+	Name:  "network",
+	Usage: "container network command",
+	Subcommands: []cli.Command{
+		{
+			Name:  "create",
+			Usage: "create a container network",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "driver",
+					Usage: "network driver",
+				},
+				cli.StringFlag{
+					Name:  "subnet",
+					Usage: "subnet cidr",
+				},
+			},
+
+			Action: func(context *cli.Context) error {
+				if len(context.Args()) < 1 {
+					return fmt.Errorf("Missing network name")
+
+				}
+				network.Init()
+				err := network.CreateNetwork(context.String("driver"), context.String("subnet"), context.Args()[0])
+
+				if err != nil {
+					return fmt.Errorf("CreateNetwork Error : %v", err)
+				}
+				return
+			},
+		},
+		{
+			Name:  "list",
+			Usage: " list container network",
+			Action: func(context *cli.Context) error {
+				network.Init()
+				network.ListNetwork()
+				return nil
+			},
+		},
+		{
+			Name:  "remove",
+			Usage: "remove contianer network",
+			Action: func(context *cli.Context) error {
+				if len(context.Args()) < 1 {
+					return fmt.Errorf("Missing network name")
+				}
+
+				network.Init()
+				err := network.DeleteNetwork(context.Args()[0])
+				if err != nil {
+					return fmt.Errorf("remove network Error : %v", err)
+				}
+				return nil
+			},
+		},
 	},
 }

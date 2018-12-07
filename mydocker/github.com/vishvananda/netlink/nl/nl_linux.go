@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/vishvananda/netns"
+	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/vishvananda/netns"
 )
 
 const (
