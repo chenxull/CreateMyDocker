@@ -42,7 +42,7 @@ func (ipam *IPAM) load() error {
 		return err
 	}
 
-	subnetJson := make([]byte, 200000)
+	subnetJson := make([]byte, 2000)
 
 	//将subnetConfigFile中json类型的信息的长度存在n中,供接下来的反序列化使用
 	n, err := subnetConfigFile.Read(subnetJson)
@@ -161,10 +161,12 @@ func (ipam *IPAM) Allocate(subnet *net.IPNet) (ip net.IP, err error) {
 func (ipam *IPAM) Release(subnet *net.IPNet, ipaddr *net.IP) error {
 	ipam.Subnets = &map[string]string{}
 
+	_, subnet, _ = net.ParseCIDR(subnet.String())
+
 	// 从文件中加载网段的分配信息
 	err := ipam.load()
 	if err != nil {
-		log.Errorf("Error Release IPAM load info %v", err)
+		log.Errorf("Error dump IPAM load info %v", err)
 	}
 
 	//计算IP地址在网段位图数组中的索引位置
@@ -187,6 +189,7 @@ func (ipam *IPAM) Release(subnet *net.IPNet, ipaddr *net.IP) error {
 
 	//保存释放掉IP之后的网段IP分配信息
 	ipam.dump()
+
 	return nil
 
 }

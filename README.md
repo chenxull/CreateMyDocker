@@ -157,3 +157,10 @@ commit.go用来打包镜像
 ``` mydocker exec container sh ``` 可以发现启动时传入的环境变量在容器内部生效了.
 
 **到目前为止,基本上实现了单机版本的容器,可以管理容器从启动到删除的整个生命周期,并且多个容器可以并存,使用相同的基础镜像且存储内容互不干扰**
+
+### 2018年12月8日
+
+#### 测试创建网桥功能 
+
+``` sudo ./mydocker network create --driver bridge --subnet 192.168.10.1/24 testbridge```
+可以使用list命令查看到创建网桥的相关信息,但是查看`/var/run/mydocker/network/network`文件,发现Mask字段存储的信息不正确,还没找到问题所在

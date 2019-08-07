@@ -43,6 +43,7 @@ func RunContainerInitProcess() error {
 func readUserCommand() []string {
 	//uintptr指的就是index为3的文件描述符，也就是传递过来的管道的一端
 	pipe := os.NewFile(uintptr(3), "pipe")
+	defer pipe.Close()
 	msg, err := ioutil.ReadAll(pipe)
 	fmt.Println("Pipe::recive pipe Command\n ")
 	if err != nil {

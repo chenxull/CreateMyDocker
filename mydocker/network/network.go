@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"runtime"
@@ -75,6 +76,7 @@ func CreateNetwork(driver, subnet, name string) error {
 		return err
 	}
 	// 保存网络信息,将网络信息保存在文件系统中,方便查询和在网络上连接网络端点
+	logrus.Infof("CreateNetwork driver name %s", nw.Name)
 	return nw.dump(defaultNetworkPath)
 }
 
@@ -100,7 +102,7 @@ func (nw *Network) dump(dumpPath string) error {
 	nwPath := path.Join(dumpPath, nw.Name)
 
 	//打开保存的文件用于写入,后面的参数模式依次是:存在内容则清空,只写入,不存在则创建
-	nwFile, err := os.OpenFile(nwPath, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
+	nwFile, err := os.OpenFile(nwPath, os.O_TRUNC | os.O_WRONLY | os.O_CREATE, 0644)
 	if err != nil {
 		logrus.Errorf("OpenFile nw error %v", err)
 		return err
@@ -211,6 +213,7 @@ func Init() error {
 	var brdgeDriver = BridgeNetWorkDriver{}
 	drivers[brdgeDriver.Name()] = &brdgeDriver
 
+	logrus.Infof("BridgeDrive Name : %s", brdgeDriver.Name())
 	//判断网络的配置目录是否存在,不存在则创建
 	if _, err := os.Stat(defaultNetworkPath); err != nil {
 		if os.IsNotExist(err) {
@@ -222,10 +225,6 @@ func Init() error {
 
 	//检查网络配置目录中的所有文件,并对其做相应的处理
 	filepath.Walk(defaultNetworkPath, func(nwPath string, info os.FileInfo, err error) error {
-
-		if strings.HasSuffix(nwPath, "/") {
-			return nil
-		}
 
 		//如果是目录则跳过
 		if info.IsDir() {
@@ -305,6 +304,12 @@ func configEndpointIpAddressAndRoute(ep *Endpoint, cinfo *container.ContainerInf
 
 	/*
 		将容器的网络端点加入到容器的网络空间中,并使这个函数下面的操作都在这个网络空间中进行
+		需要对defer func()()的运行机制有着深入的理解,
+		1. 当要进入容器的Net Namespace,只需要调用defer enterContainerNetns(&peerLink, cinfo)(),则在当前
+		函数体结束之前都会在容器的Net Namespace中.
+		2. 在调用enterContainerNetns(&peerLink, cinfo)()时会使当前执行的函数进入容器的Net Namespace中,在这里就是configEndpointIpAddressAndRoute函数
+		,而用了defer后,会在函数体结束时执行返回的恢复函数指针,并会在函数结束之后恢复到原来所在的网络空间.
+
 	*/
 	defer enterContainerNetns(&peerLink, cinfo)()
 
@@ -317,7 +322,7 @@ func configEndpointIpAddressAndRoute(ep *Endpoint, cinfo *container.ContainerInf
 	interfaceIP.IP = ep.IPAddress
 
 	if err = setInteraceIP(ep.Device.PeerName, interfaceIP.String()); err != nil {
-		return fmt.Errorf("设置容器内部网络 Error %v,%s", ep.Network, err)
+		return fmt.Errorf("设置 Endpoint IP Error %v,%s", ep.Network, err)
 	}
 
 	//启动容器内的Veth
@@ -354,6 +359,8 @@ func configEndpointIpAddressAndRoute(ep *Endpoint, cinfo *container.ContainerInf
 	返回值是个函数指针,执行这个返回函数才会退出容器的网络空间,回归到宿主机的网络空间
 */
 func enterContainerNetns(enLink *netlink.Link, cinfo *container.ContainerInfo) func() {
+
+	//找到容器所在的Net Namespace
 	f, err := os.OpenFile(fmt.Sprintf("/proc/%s/ns/net", cinfo.Pid), os.O_RDONLY, 0)
 	if err != nil {
 		logrus.Errorf("Error get container net namespace .%v", err)
@@ -390,4 +397,29 @@ func enterContainerNetns(enLink *netlink.Link, cinfo *container.ContainerInfo) f
 		f.Close()
 	}
 
+}
+
+//configPortMapping 配置端口映射
+func configPortMapping(ep *Endpoint, cinfo *container.ContainerInfo) error {
+
+	for _, pm := range ep.PortMapping {
+		//分割成宿主机的端口和容器的端口
+		portMapping := strings.Split(pm, ":")
+		if len(portMapping) != 2 {
+			logrus.Errorf("port Mapping format error %v", pm)
+			continue
+		}
+		//将宿主机的端口请求转发到容器的地址和端口上
+		iptablesCmd := fmt.Sprintf("-t nat -A PREROUTING -p tcp -m tcp --dport %s -j DNAT --to-destination %s:%s",
+			portMapping[0], ep.IPAddress.String(), portMapping[1])
+
+		//执行iptables命令,添加端口映射转发规则
+		cmd := exec.Command("iptables", strings.Split(iptablesCmd, " ")...)
+		output, err := cmd.Output()
+		if err != nil {
+			logrus.Errorf("iptables Output :%v", output)
+			continue
+		}
+	}
+	return nil
 }

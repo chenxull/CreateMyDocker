@@ -5,9 +5,11 @@ import (
 	"net"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/vishvananda/netlink"
 
+	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/Sirupsen/logrus"
 	log "github.com/chenxull/mydocker/CreateMyDocker/mydocker/github.com/Sirupsen/logrus"
 )
 
@@ -25,11 +27,12 @@ func (d *BridgeNetWorkDriver) Create(subnet string, name string) (*Network, erro
 	//通过ParseCIDR获取网段的字符串中的网关IP地址和网络IP段
 	ip, ipRange, _ := net.ParseCIDR(subnet)
 	ipRange.IP = ip
-
+	//logrus.Infof("ipRang : %v ", ipRange)
 	//初始化网络对象
 	n := &Network{
 		Name:    name,
 		IpRange: ipRange,
+		Driver:  d.Name(),
 	}
 
 	//配置Linux bridge
@@ -81,11 +84,13 @@ func (d *BridgeNetWorkDriver) Connect(network *Network, endpoint *Endpoint) erro
 	if err = netlink.LinkAdd(&endpoint.Device); err != nil {
 		return fmt.Errorf("Error Add Endpoint Device :%v", err)
 	}
+	logrus.Infof("LinkAdd endpoint.Device")
 
 	//启动endpoint设备
 	if err = netlink.LinkSetUp(&endpoint.Device); err != nil {
 		return fmt.Errorf("Error Set UP Endpoing Device : %v", err)
 	}
+	logrus.Infof("SetUp endpoint.Device")
 	return nil
 }
 
@@ -153,10 +158,22 @@ func createBridgeInterface(bridgeName string) error {
 // 2.设置Bridge设备的地址和路由 ,不仅限于Bridge,也可以对容器内的veth进行操作
 func setInteraceIP(name string, rawIP string) error {
 	//找到需要设置的网络接口
-	iface, err := netlink.LinkByName(name)
-	if err != nil {
-		return fmt.Errorf("Error get interface :%v", err)
+	retries := 2
+	var iface netlink.Link
+	var err error
+	for i := 0; i < retries; i++ {
+		iface, err = netlink.LinkByName(name)
+		if err == nil {
+			break
+		}
+		log.Infof("error retrieving new bridge netlink link [ %s ]... retrying", name)
+		time.Sleep(2 * time.Second)
 	}
+
+	if err != nil {
+		return fmt.Errorf("Abandoning retrieving the new bridge link from netlink, Run [ ip link ] to troubleshoot the error: %v", err)
+	}
+
 	//ipNet中既包含了网段信息192.168.0.0/24  也包含了原始的IP 192.168.0.1
 	//netlink.ParseIPNet 是对ParseCIDR的一个封装,可同时返回上述信息
 	ipNet, err := netlink.ParseIPNet(rawIP)

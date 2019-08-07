@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/network"
+
 	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/cgroups"
 	"github.com/chenxull/mydocker/CreateMyDocker/mydocker/cgroups/subsystems"
 
@@ -19,7 +21,7 @@ import (
 
 //Run 容器启动入口
 func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, volume string,
-	containerName string, imageName string, envSlice []string) {
+	containerName string, imageName string, envSlice []string, nw string, portmapping []string) {
 
 	containerID := randStringBytes(10)
 	if containerName == "" {
@@ -46,14 +48,29 @@ func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, volume str
 
 	//use mydocker-cgroup as cgroup name
 	//创建cgroup manager，并通过调用set和apply设置资源限制并使限制在容器上生效
-	cgroupManager := cgroups.NewCgroupManager("mydocker-cgroup")
+	cgroupManager := cgroups.NewCgroupManager(containerID)
 
 	//设置容器资源限制
-	fmt.Println("初始化Cgroup")
+	//fmt.Println("初始化Cgroup")
 	cgroupManager.Set(res)
 	//将容器进程加入到各个Subsystem挂载对应的cgroup中
 	cgroupManager.Apply(parent.Process.Pid)
 	defer cgroupManager.Destory()
+
+	if nw != "" {
+		network.Init()
+		containerInfo := &container.ContainerInfo{
+			Id:          containerID,
+			Pid:         strconv.Itoa(parent.Process.Pid),
+			Name:        containerName,
+			PortMapping: portmapping,
+		}
+		log.Infof("nw info %s", nw)
+		if err := network.Connect(nw, containerInfo); err != nil {
+			log.Errorf("Error Connect NetWork %v", err)  //BUG
+			return
+		}
+	}
 	sendInitCommand(comArray, wirtePipe)
 
 	if tty {

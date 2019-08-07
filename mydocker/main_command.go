@@ -77,25 +77,32 @@ var runCommand = cli.Command{
 			cmdArray = append(cmdArray, arg)
 		}
 
+		//get image name
 		imageName := cmdArray[0]
 		cmdArray = cmdArray[1:]
 		createTty := context.Bool("ti")
 		detach := context.Bool("d")
-		envSlice := context.StringSlice("e")
 
 		if createTty && detach {
 			return fmt.Errorf("ti and d paramter can not both provided")
 		}
-		volume := context.String("v")
+
 		resconfig := &subsystems.ResourceConfig{
 			MemoryLimit: context.String("m"),
 			CpuSet:      context.String("cpuset"),
 			CpuShare:    context.String("cpushare"),
 		}
+
+		log.Infof("createTty %v", createTty)
+		volume := context.String("v")
 		contaienrName := context.String("name")
+		network := context.String("net")
+
+		envSlice := context.StringSlice("e")
+		portmapping := context.StringSlice("p")
 		fmt.Println("runCommand is starting \n")
 
-		Run(createTty, cmdArray, resconfig, volume, contaienrName, imageName, envSlice)
+		Run(createTty, cmdArray, resconfig, volume, contaienrName, imageName, envSlice, network, portmapping)
 		return nil
 	},
 }
@@ -109,10 +116,7 @@ var initCommand = cli.Command{
 		2. 执行容器初始化操作
 	*/
 	Action: func(context *cli.Context) error {
-		//log.Infof("init come on 1")
-		cmd := context.Args().Get(0)
-		log.Infof("InitCommand  %s", cmd)
-
+		log.Infof("init come on 1")
 		err := container.RunContainerInitProcess()
 		return err
 	},
@@ -238,7 +242,7 @@ var networkCommand = cli.Command{
 				if err != nil {
 					return fmt.Errorf("CreateNetwork Error : %v", err)
 				}
-				return
+				return nil
 			},
 		},
 		{
@@ -263,6 +267,7 @@ var networkCommand = cli.Command{
 				if err != nil {
 					return fmt.Errorf("remove network Error : %v", err)
 				}
+				log.Infof("remove  network %s successful ", context.Args()[0])
 				return nil
 			},
 		},
