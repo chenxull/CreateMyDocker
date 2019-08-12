@@ -21,6 +21,7 @@ var (
 	WriteLayerUrl       string = "/root/writeLayer/%s"
 )
 
+// ContainerInfo is
 type ContainerInfo struct {
 	Pid         string   `json:"pid"`
 	Id          string   `json:"id"`
@@ -53,10 +54,12 @@ func NewParentProcess(tty bool, volume, containerName, imageName string, envSlic
 	}
 
 	// 怎么通过这个init去调用initCommand？/proc/se;f/exe就是调用自己，发送init参数，调用initcommand
+	// /proc/self/exe 连接到进程的执行命令文件
 	initCmd, err := os.Readlink("/proc/self/exe")
 	if err != nil {
 		log.Errorf("get init process error %v", err)
 	}
+	// 调用init 方法,创建子进程
 	cmd := exec.Command(initCmd, "init")
 
 	cmd.SysProcAttr = &syscall.SysProcAttr{
@@ -87,6 +90,7 @@ func NewParentProcess(tty bool, volume, containerName, imageName string, envSlic
 	cmd.ExtraFiles = []*os.File{readPipe}
 	//在默认情况下,新启动的进程都是继承父进程的环境变量,这里使用传入的环境变量,os.Envsion()是宿主机的变量
 	cmd.Env = append(os.Environ(), envSlice...)
+	// 用来创建容器的文件系统
 	NewWorkSpace(volume, imageName, containerName)
 	//rootfs的挂载目录
 	cmd.Dir = fmt.Sprintf(MntUrl, containerName)

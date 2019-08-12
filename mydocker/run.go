@@ -23,11 +23,18 @@ import (
 func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, volume string,
 	containerName string, imageName string, envSlice []string, nw string, portmapping []string) {
 
+	// 使用生成的随机数作为container ID
 	containerID := randStringBytes(10)
 	if containerName == "" {
 		containerName = containerID
 	}
 
+	/*
+		这里的 Start 方法是真正开始前面创建好的 command 的调用，它首先会 clone 出来一个 name space 隔离的 进程，然后在子进程中，
+		调用／ proc/self/exe ，也就是调用自己，发送 in it 参数，调用我们写的Init 方法， 去初始化容器的一些资源。
+
+		父进程与子进程之间使用pipe进行通信
+	*/
 	parent, wirtePipe := container.NewParentProcess(tty, volume, containerName, imageName, envSlice)
 
 	if parent == nil {
@@ -67,10 +74,11 @@ func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, volume str
 		}
 		log.Infof("nw info %s", nw)
 		if err := network.Connect(nw, containerInfo); err != nil {
-			log.Errorf("Error Connect NetWork %v", err)  //BUG
+			log.Errorf("Error Connect NetWork %v", err) //BUG
 			return
 		}
 	}
+	// 将参数发送到容器中
 	sendInitCommand(comArray, wirtePipe)
 
 	if tty {

@@ -1,13 +1,14 @@
 package subsystems
 
 //ResourceConfig used to restrict MemoryLimit,CPUShare,cpuSet
+// 实现了三种资源的限制
 type ResourceConfig struct {
 	MemoryLimit string
 	CpuShare    string
 	CpuSet      string
 }
 
-//Subsystem 接口，每个接口有下面四个实现，这里讲cgroup抽象成了path
+//Subsystem 接口，每个接口有下面四个实现
 type Subsystem interface {
 	//返回Subsystem的名字
 	Name() string
@@ -19,7 +20,7 @@ type Subsystem interface {
 	Remove(path string) error
 }
 
-//通过不同的Subsystem初始化实例创建资源限制处理链数组
+//通过不同的Subsystem初始化实例 创建资源限制处理链数组
 var (
 	SubsystemsIns = []Subsystem{
 		&CpusetSubSystem{},

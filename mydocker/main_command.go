@@ -49,7 +49,7 @@ var runCommand = cli.Command{
 			Usage: "container name",
 		},
 		cli.StringSliceFlag{
-			Name:  " e",
+			Name:  "e",
 			Usage: "set environment",
 		},
 		cli.StringFlag{
@@ -81,12 +81,14 @@ var runCommand = cli.Command{
 		imageName := cmdArray[0]
 		cmdArray = cmdArray[1:]
 		createTty := context.Bool("ti")
+		// d 是用来是容器后台运行
 		detach := context.Bool("d")
 
 		if createTty && detach {
 			return fmt.Errorf("ti and d paramter can not both provided")
 		}
 
+		// 资源限制的配置参数
 		resconfig := &subsystems.ResourceConfig{
 			MemoryLimit: context.String("m"),
 			CpuSet:      context.String("cpuset"),
@@ -117,6 +119,7 @@ var initCommand = cli.Command{
 	*/
 	Action: func(context *cli.Context) error {
 		log.Infof("init come on 1")
+		// 启动容器,做初始化工作
 		err := container.RunContainerInitProcess()
 		return err
 	},

@@ -16,6 +16,7 @@ type CgroupManager struct {
 
 //NewCgroupManager 创建cgroup管理器
 func NewCgroupManager(path string) *CgroupManager {
+	// 初始化 subsystem 实例
 	return &CgroupManager{
 		Path: path,
 	}

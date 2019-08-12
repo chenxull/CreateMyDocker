@@ -17,8 +17,8 @@ func commitContainer(containerName, imageName string) {
 
 	imageTar := container.RootUrl + "/" + imageName + ".tar"
 
-	fmt.Printf("镜像打包成功")
 	if _, err := exec.Command("tar", "-czf", imageTar, "-C", mntURL, ".").CombinedOutput(); err != nil {
 		log.Errorf("Tar folder %s error . %v", mntURL, err)
 	}
+	fmt.Printf("镜像打包成功")
 }

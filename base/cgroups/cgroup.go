@@ -28,6 +28,7 @@ func main() {
 		cmd.Stderr = os.Stderr
 
 		if err := cmd.Run(); err != nil {
+			fmt.Println("err")
 			fmt.Println(err)
 			os.Exit((1))
 		}

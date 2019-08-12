@@ -13,7 +13,8 @@ type MemorySubSystem struct {
 }
 
 //Set is the interface method
-//GetCgroupPath 的作用是获取当前 subsystem 在虚拟文件系统中的路径,具体来说就是找到对应Subsystem挂载的hierarchy相对路径对应的cgroup在虚拟文件系统中的路径
+//GetCgroupPath 的作用是获取当前 subsystem 在虚拟文件系统中的路径,
+// 具体来说就是找到对应Subsystem挂载的hierarchy相对路径 对应的cgroup在虚拟文件系统中的路径
 func (s *MemorySubSystem) Set(cgroupPath string, res *ResourceConfig) error {
 	if subsysCgroupPath, err := GetCgroupPath(s.Name(), cgroupPath, true); err == nil {
 		//fmt.Printf("subsysCgropuPath :%s\n", subsysCgroupPath)
