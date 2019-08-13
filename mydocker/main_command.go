@@ -121,6 +121,10 @@ var initCommand = cli.Command{
 		log.Infof("init come on 1")
 		// 启动容器,做初始化工作
 		err := container.RunContainerInitProcess()
+		// todo need to fix :设置容器状态为stop ,没有初始化成功
+		if err != nil {
+			// todo
+		}
 		return err
 	},
 }

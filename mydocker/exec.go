@@ -30,7 +30,8 @@ func ExecContainer(containerName string, comArray []string) {
 	log.Infof("container Pid %s", pid)
 	log.Infof("command %s", cmdStr)
 
-	//下面使用参数exec,就是为了c代码的执行
+	//下面使用参数exec,就是为了c代码再次执行一遍,这次执行是制定了环境变量
+	// 再一次运行的时候已经指定了环境变量，所以 C 代码执行的时候就能拿到对应的环境变量 ， 便可以进入到指定的 Namespace 中进行操作了。
 	cmd := exec.Command("/proc/self/exe", "exec")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

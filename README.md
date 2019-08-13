@@ -164,3 +164,8 @@ commit.go用来打包镜像
 
 ``` sudo ./mydocker network create --driver bridge --subnet 192.168.10.1/24 testbridge```
 可以使用list命令查看到创建网桥的相关信息,但是查看`/var/run/mydocker/network/network`文件,发现Mask字段存储的信息不正确,还没找到问题所在
+
+
+## bug
+
+- [ ] 在启动容器失败后,容器不会被删除. 使用mydocker ps 命令可以查看到此容器正在运行,其实此容器进程以及关闭,只是日志信息没有来得及更新 

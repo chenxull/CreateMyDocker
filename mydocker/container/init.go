@@ -33,6 +33,7 @@ func RunContainerInitProcess() error {
 	//调用LookPath可以在系统的PATH里面寻找命令的绝对路径
 	path, err := exec.LookPath(cmdArray[0])
 	if err != nil {
+
 		log.Errorf("Exec loop path error %v", err)
 		return err
 	}

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"strconv"
@@ -43,6 +44,7 @@ func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, volume str
 	}
 
 	if err := parent.Start(); err != nil {
+		changeConstatus(containerName)
 		log.Error(err)
 	}
 
@@ -169,4 +171,32 @@ func sendInitCommand(comArray []string, wirtePipe *os.File) {
 	log.Infof("command all is %s", command)
 	wirtePipe.WriteString(command)
 	wirtePipe.Close()
+}
+
+//  容器启动失败,将其状态标注为stop
+func changeConstatus(containerName string) {
+	containerInfo, err := getContainerInfoByName(containerName)
+	if err != nil {
+		log.Errorf("Get containerinfo error %v", err)
+		return
+	}
+
+	containerInfo.Status = container.STOP
+	containerInfo.Pid = " "
+
+	//将修改过后的信息序列化成json字符串
+	newcontentBytes, err := json.Marshal(containerInfo)
+	if err != nil {
+		log.Errorf("Json marshal %s error %v", containerName, err)
+		return
+	}
+
+	//将修改后的内容写入对应目录中
+	dirURL := fmt.Sprintf(container.DefaultInfoLocation, containerName)
+	configFilePath := dirURL + container.ConfigName
+
+	if err := ioutil.WriteFile(configFilePath, newcontentBytes, 0622); err != nil {
+		log.Errorf("WriteFile %s error %v", configFilePath, err)
+		return
+	}
 }
